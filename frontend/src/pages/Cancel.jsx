@@ -10,7 +10,7 @@ const Cancel = () => {
   const [orderData, setOrderData] = useState(null)
 
   useEffect(() => {
-    // If we have a session ID, mark the order as failed
+
     const markOrderAsFailed = async () => {
       if (!sessionId) return
 
@@ -43,19 +43,17 @@ const Cancel = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="max-w-md w-full text-center">
-        {/* Cancel Icon */}
+
         <div className="inline-flex items-center justify-center w-20 h-20 bg-yellow-100 rounded-full mb-6">
           <XCircle className="text-yellow-600" size={48} />
         </div>
 
-        {/* Message */}
         <h1 className="text-3xl font-bold mb-4">Payment Cancelled</h1>
         <p className="text-gray-600 mb-8">
           Your payment was cancelled. No charges were made to your account.
           You can return to the store and try again when you're ready.
         </p>
 
-        {/* Order ID if available */}
         {orderData && (
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6 text-left">
             <p className="text-sm text-gray-600">
@@ -67,7 +65,6 @@ const Cancel = () => {
           </div>
         )}
 
-        {/* Actions */}
         <div className="space-y-3">
           <Link to="/" className="btn btn-primary w-full block">
             Return to Store
@@ -77,7 +74,7 @@ const Cancel = () => {
           </p>
         </div>
 
-        {/* Info Box */}
+
         <div className="mt-8 p-4 bg-gray-50 rounded-lg text-left">
           <h3 className="font-semibold mb-2 text-sm">What happens next?</h3>
           <ul className="text-sm text-gray-600 space-y-1">

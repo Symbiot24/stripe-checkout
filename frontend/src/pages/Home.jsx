@@ -5,7 +5,6 @@ import ProductCard from '../components/ProductCard'
 import Cart from '../components/Cart'
 import { createCheckoutSession } from '../config/api'
 
-// Sample products - replace with your actual products
 const PRODUCTS = [
   {
     id: 1,
@@ -96,7 +95,6 @@ const Home = () => {
         throw new Error('No checkout URL received from server')
       }
       
-      // Redirect to Stripe Checkout
       window.location.href = result.url
     } catch (error) {
       console.error('Checkout error:', error)
@@ -114,7 +112,6 @@ const Home = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Header */}
       <header className="bg-white border-b sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
@@ -130,7 +127,6 @@ const Home = () => {
         </div>
       </header>
 
-      {/* Hero Section */}
       <section className="bg-gradient-to-br from-gray-50 to-gray-100 py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl sm:text-5xl font-bold mb-4">
@@ -142,7 +138,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Products Grid */}
       <section className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {PRODUCTS.map(product => {
@@ -160,7 +155,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Cart */}
       <Cart
         items={cart}
         products={PRODUCTS}

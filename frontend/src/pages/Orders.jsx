@@ -46,7 +46,6 @@ const Orders = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4">
@@ -62,7 +61,6 @@ const Orders = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        {/* Loading State */}
         {loading && (
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
@@ -72,7 +70,6 @@ const Orders = () => {
           </div>
         )}
 
-        {/* Error State */}
         {error && (
           <div className="text-center py-20">
             <p className="text-red-600 mb-4">{error}</p>
@@ -86,7 +83,6 @@ const Orders = () => {
           </div>
         )}
 
-        {/* Empty State */}
         {!loading && !error && orders.length === 0 && (
           <div className="text-center py-20">
             <Package size={64} className="mx-auto mb-4 text-gray-300" />
@@ -100,7 +96,6 @@ const Orders = () => {
           </div>
         )}
 
-        {/* Orders List */}
         {!loading && !error && orders.length > 0 && (
           <>
             <div className="space-y-4">
@@ -135,7 +130,6 @@ const Orders = () => {
                     </div>
                   </div>
 
-                  {/* Order Items */}
                   {order.items && order.items.length > 0 && (
                     <div>
                       <p className="text-sm font-semibold mb-2">Items</p>
@@ -159,7 +153,6 @@ const Orders = () => {
               ))}
             </div>
 
-            {/* Pagination */}
             {pagination && pagination.pages > 1 && (
               <div className="flex items-center justify-center gap-2 mt-8">
                 <button

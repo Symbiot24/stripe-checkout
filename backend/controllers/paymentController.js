@@ -1,12 +1,12 @@
 const Order = require('../models/order');
 
-// Initialize Stripe - will be set after env is loaded
+
 let stripe;
 
-// Create checkout session
+
 exports.createCheckoutSession = async (req, res) => {
   try {
-    // Initialize stripe if not already done
+
     if (!stripe) {
       const stripeKey = process.env.STRIPE_SECRET_KEY;
       if (!stripeKey) {
@@ -25,7 +25,7 @@ exports.createCheckoutSession = async (req, res) => {
       hasCancelUrl: !!cancelUrl
     });
 
-    // Validate required fields
+
     if (!items || !Array.isArray(items) || items.length === 0) {
       console.log('Validation error: Items array is required');
       return res.status(400).json({ error: 'Items array is required' });
@@ -36,7 +36,7 @@ exports.createCheckoutSession = async (req, res) => {
       return res.status(400).json({ error: 'Customer email is required' });
     }
 
-    // Transform items to Stripe line items format
+
     const lineItems = items.map(item => ({
       price_data: {
         currency: 'usd',
@@ -45,15 +45,15 @@ exports.createCheckoutSession = async (req, res) => {
           description: item.description || '',
           images: item.image ? [item.image] : [],
         },
-        unit_amount: Math.round(item.price * 100), // Convert to cents
+        unit_amount: Math.round(item.price * 100), 
       },
       quantity: item.quantity,
     }));
 
-    // Calculate total amount
+
     const totalAmount = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-    // Create Stripe checkout session
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: lineItems,
@@ -71,7 +71,7 @@ exports.createCheckoutSession = async (req, res) => {
       },
     });
 
-    // Create order in database with pending status
+
     const order = new Order({
       stripeSessionId: session.id,
       customerEmail,
@@ -113,10 +113,10 @@ exports.createCheckoutSession = async (req, res) => {
   }
 };
 
-// Get session status
+
 exports.getSessionStatus = async (req, res) => {
   try {
-    // Initialize stripe if not already done
+
     if (!stripe) {
       stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
     }
@@ -129,17 +129,15 @@ exports.getSessionStatus = async (req, res) => {
 
     const session = await stripe.checkout.sessions.retrieve(sessionId);
     
-    // Find order in database
+
     let order = await Order.findOne({ stripeSessionId: sessionId });
 
-    // If payment is complete but order is still pending, update the order status
-    // This handles cases where webhook didn't fire (e.g., local development)
+
     if (order && order.paymentStatus === 'pending' && session.payment_status === 'paid') {
       order.paymentStatus = 'paid';
       order.paymentIntentId = session.payment_intent;
       order.customerName = session.customer_details?.name || '';
       
-      // Update shipping address if available
       if (session.shipping_details?.address) {
         order.shippingAddress = {
           line1: session.shipping_details.address.line1,
@@ -151,7 +149,7 @@ exports.getSessionStatus = async (req, res) => {
         };
       }
 
-      // Store metadata
+
       order.metadata = {
         sessionId: session.id,
         customerId: session.customer,
@@ -162,9 +160,9 @@ exports.getSessionStatus = async (req, res) => {
       console.log(`Order ${order._id} updated to paid status via session status check`);
     }
 
-    // Handle failed payment status
+
     if (order && order.paymentStatus === 'pending') {
-      // Session expired without payment
+
       if (session.payment_status === 'unpaid' && session.status === 'expired') {
         order.paymentStatus = 'failed';
         order.metadata = {
@@ -175,7 +173,7 @@ exports.getSessionStatus = async (req, res) => {
         await order.save();
         console.log(`Order ${order._id} marked as failed - session expired`);
       }
-      // Payment explicitly failed (session complete but payment unpaid)
+
       else if (session.status === 'complete' && session.payment_status === 'unpaid') {
         order.paymentStatus = 'failed';
         order.metadata = {
@@ -203,7 +201,7 @@ exports.getSessionStatus = async (req, res) => {
   }
 };
 
-// Get order by ID
+
 exports.getOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -221,7 +219,7 @@ exports.getOrder = async (req, res) => {
   }
 };
 
-// Get all orders (optional - for admin)
+
 exports.getAllOrders = async (req, res) => {
   try {
     const { limit = 50, page = 1 } = req.query;
@@ -248,10 +246,10 @@ exports.getAllOrders = async (req, res) => {
   }
 };
 
-// Create payment intent (alternative to checkout session)
+
 exports.createPaymentIntent = async (req, res) => {
   try {
-    // Initialize stripe if not already done
+
     if (!stripe) {
       stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
     }
@@ -263,7 +261,7 @@ exports.createPaymentIntent = async (req, res) => {
     }
 
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount * 100), // Convert to cents
+      amount: Math.round(amount * 100),
       currency,
       receipt_email: customerEmail,
       metadata: {
@@ -281,10 +279,10 @@ exports.createPaymentIntent = async (req, res) => {
   }
 };
 
-// Confirm payment and update order status - fallback for webhook
+
 exports.confirmPayment = async (req, res) => {
   try {
-    // Initialize stripe if not already done
+
     if (!stripe) {
       stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
     }
@@ -295,23 +293,21 @@ exports.confirmPayment = async (req, res) => {
       return res.status(400).json({ error: 'Session ID is required' });
     }
 
-    // Retrieve session from Stripe to get actual payment status
+
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-    // Find order in database
+
     const order = await Order.findOne({ stripeSessionId: sessionId });
 
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
     }
 
-    // Only update if payment is actually complete in Stripe
     if (session.payment_status === 'paid') {
       order.paymentStatus = 'paid';
       order.paymentIntentId = session.payment_intent;
       order.customerName = session.customer_details?.name || '';
 
-      // Update shipping address if available
       if (session.shipping_details?.address) {
         order.shippingAddress = {
           line1: session.shipping_details.address.line1,
@@ -323,7 +319,7 @@ exports.confirmPayment = async (req, res) => {
         };
       }
 
-      // Store metadata
+
       order.metadata = {
         sessionId: session.id,
         customerId: session.customer,
@@ -340,7 +336,7 @@ exports.confirmPayment = async (req, res) => {
         order: order,
       });
     } else if (session.payment_status === 'unpaid') {
-      // Mark order as failed if session is expired or complete but unpaid
+
       if (session.status === 'expired' || session.status === 'complete') {
         order.paymentStatus = 'failed';
         order.metadata = {

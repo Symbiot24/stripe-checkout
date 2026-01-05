@@ -1,10 +1,9 @@
 const Order = require('../models/order');
 
-// Initialize Stripe - will be set after env is loaded
 let stripe;
 
 const stripeWebhook = async (req, res) => {
-  // Initialize stripe if not already done
+
   if (!stripe) {
     stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
   }
@@ -15,14 +14,13 @@ const stripeWebhook = async (req, res) => {
   let event;
 
   try {
-    // Verify webhook signature
+
     event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
   } catch (err) {
     console.error(`Webhook signature verification failed: ${err.message}`);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  // Handle the event
   try {
     switch (event.type) {
       case 'checkout.session.completed':
@@ -56,22 +54,21 @@ const stripeWebhook = async (req, res) => {
   }
 };
 
-// Handle successful checkout session
 const handleCheckoutSessionCompleted = async (session) => {
   console.log('Checkout session completed:', session.id);
 
   try {
-    // Initialize stripe if not already done
+
     if (!stripe) {
       stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
     }
 
-    // Retrieve the session with line items
+
     const sessionWithLineItems = await stripe.checkout.sessions.retrieve(session.id, {
       expand: ['line_items', 'customer', 'payment_intent'],
     });
 
-    // Find and update the order
+ 
     const order = await Order.findOne({ stripeSessionId: session.id });
 
     if (order) {
@@ -79,7 +76,7 @@ const handleCheckoutSessionCompleted = async (session) => {
       order.paymentIntentId = session.payment_intent;
       order.customerName = session.customer_details?.name || '';
       
-      // Update shipping address
+
       if (session.shipping_details?.address) {
         order.shippingAddress = {
           line1: session.shipping_details.address.line1,
@@ -91,7 +88,7 @@ const handleCheckoutSessionCompleted = async (session) => {
         };
       }
 
-      // Store metadata
+
       order.metadata = {
         sessionId: session.id,
         customerId: session.customer,
@@ -109,12 +106,12 @@ const handleCheckoutSessionCompleted = async (session) => {
   }
 };
 
-// Handle successful payment intent
+
 const handlePaymentIntentSucceeded = async (paymentIntent) => {
   console.log('Payment intent succeeded:', paymentIntent.id);
 
   try {
-    // Update order if it exists
+
     const order = await Order.findOne({ paymentIntentId: paymentIntent.id });
 
     if (order) {
@@ -128,12 +125,12 @@ const handlePaymentIntentSucceeded = async (paymentIntent) => {
   }
 };
 
-// Handle failed payment intent
+
 const handlePaymentIntentFailed = async (paymentIntent) => {
   console.log('Payment intent failed:', paymentIntent.id);
 
   try {
-    // Update order status to failed
+
     const order = await Order.findOne({ paymentIntentId: paymentIntent.id });
 
     if (order) {
@@ -151,12 +148,12 @@ const handlePaymentIntentFailed = async (paymentIntent) => {
   }
 };
 
-// Handle charge refunded
+
 const handleChargeRefunded = async (charge) => {
   console.log('Charge refunded:', charge.id);
 
   try {
-    // Find order by payment intent
+
     const order = await Order.findOne({ paymentIntentId: charge.payment_intent });
 
     if (order) {

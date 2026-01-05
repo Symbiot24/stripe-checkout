@@ -23,7 +23,6 @@ const Success = () => {
         const data = await getSessionStatus(sessionId)
         setOrderData(data)
         
-        // If payment failed, show error state
         if (data.order?.paymentStatus === 'failed') {
           setError('Payment failed')
         }
@@ -37,18 +36,15 @@ const Success = () => {
 
     fetchOrderDetails()
 
-    // Poll for status updates every 3 seconds if status is pending
     const interval = setInterval(async () => {
       if (orderData?.order?.paymentStatus === 'pending') {
         try {
           const data = await getSessionStatus(sessionId)
           setOrderData(data)
           
-          // Stop polling if payment is no longer pending
           if (data.order?.paymentStatus !== 'pending') {
             clearInterval(interval)
             
-            // If payment failed, show error
             if (data.order?.paymentStatus === 'failed') {
               setError('Payment failed')
             }
@@ -74,7 +70,6 @@ const Success = () => {
   }
 
   if (error || !orderData) {
-    // Show failed payment state
     if (orderData?.order?.paymentStatus === 'failed') {
       return (
         <div className="min-h-screen flex items-center justify-center p-4">
@@ -107,7 +102,6 @@ const Success = () => {
       )
     }
 
-    // Generic error state
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="max-w-md w-full text-center">
@@ -127,7 +121,6 @@ const Success = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="max-w-2xl w-full">
-        {/* Success Icon */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4">
             <CheckCircle className="text-green-600" size={48} />
@@ -136,7 +129,7 @@ const Success = () => {
           <p className="text-gray-600">Thank you for your purchase</p>
         </div>
 
-        {/* Order Details Card */}
+
         <div className="card p-6 sm:p-8 mb-6">
           <div className="flex items-center gap-3 mb-6 pb-6 border-b">
             <Package className="text-gray-400" size={24} />
@@ -171,7 +164,6 @@ const Success = () => {
             </div>
           </div>
 
-          {/* Order Items */}
           {orderData.order?.items && orderData.order.items.length > 0 && (
             <div className="border-t pt-6">
               <h3 className="font-semibold mb-4">Order Items</h3>
@@ -190,14 +182,12 @@ const Success = () => {
           )}
         </div>
 
-        {/* Confirmation Message */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
           <p className="text-sm text-blue-800">
             📧 A confirmation email has been sent to <strong>{orderData.customerEmail}</strong>
           </p>
         </div>
 
-        {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-3">
           <Link to="/" className="btn btn-primary flex-1 text-center">
             Continue Shopping

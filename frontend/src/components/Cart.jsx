@@ -21,7 +21,6 @@ const Cart = ({ items, products, onUpdateQuantity, onCheckout, isLoading }) => {
 
   return (
     <>
-      {/* Cart Button */}
       <button
         onClick={() => setShowCart(true)}
         className="fixed bottom-6 right-6 bg-black text-white w-16 h-16 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center justify-center z-40"
@@ -34,7 +33,6 @@ const Cart = ({ items, products, onUpdateQuantity, onCheckout, isLoading }) => {
         )}
       </button>
 
-      {/* Cart Sidebar */}
       {showCart && (
         <>
           <div
@@ -42,7 +40,6 @@ const Cart = ({ items, products, onUpdateQuantity, onCheckout, isLoading }) => {
             onClick={() => setShowCart(false)}
           />
           <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-50 flex flex-col">
-            {/* Header */}
             <div className="p-6 border-b flex items-center justify-between">
               <h2 className="text-2xl font-bold">Your Cart</h2>
               <button
@@ -53,7 +50,6 @@ const Cart = ({ items, products, onUpdateQuantity, onCheckout, isLoading }) => {
               </button>
             </div>
 
-            {/* Cart Items */}
             <div className="flex-1 overflow-y-auto p-6">
               {cartItems.length === 0 ? (
                 <div className="h-full flex items-center justify-center text-gray-400">
@@ -106,7 +102,6 @@ const Cart = ({ items, products, onUpdateQuantity, onCheckout, isLoading }) => {
               )}
             </div>
 
-            {/* Checkout Form */}
             {cartItems.length > 0 && (
               <div className="border-t p-6 space-y-4">
                 <div className="flex justify-between text-lg">
