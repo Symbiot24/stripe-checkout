@@ -60,7 +60,7 @@ exports.createCheckoutSession = async (req, res) => {
       mode: 'payment',
       customer_email: customerEmail,
       success_url: successUrl || `${process.env.CLIENT_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: cancelUrl || `${process.env.CLIENT_URL}/cancel?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: cancelUrl || `${process.env.CLIENT_URL}/cancel`,
       metadata: {
         customerEmail,
         totalAmount: totalAmount.toString(),
@@ -162,48 +162,30 @@ exports.getSessionStatus = async (req, res) => {
       console.log(`Order ${order._id} updated to paid status via session status check`);
     }
 
-    // Handle failed payment status - multiple scenarios
+    // Handle failed payment status
     if (order && order.paymentStatus === 'pending') {
-      let shouldMarkAsFailed = false;
-      let failureReason = '';
-
       // Session expired without payment
       if (session.payment_status === 'unpaid' && session.status === 'expired') {
-        shouldMarkAsFailed = true;
-        failureReason = 'Session expired without payment';
-      }
-      // Payment explicitly failed
-      else if (session.payment_status === 'failed' || session.payment_status === 'canceled') {
-        shouldMarkAsFailed = true;
-        failureReason = session.payment_status === 'failed' ? 'Payment failed' : 'Payment canceled';
-      }
-      // Payment requires action but session is no longer open
-      else if (session.payment_status === 'requires_payment_method' && session.status === 'expired') {
-        shouldMarkAsFailed = true;
-        failureReason = 'Payment method required but session expired';
-      }
-      // User opened the session but never completed (status is open but unpaid)
-      else if (session.payment_status === 'unpaid' && session.status === 'open') {
-        // Check if session was created more than 10 minutes ago
-        const sessionCreatedAt = new Date(session.created * 1000);
-        const minutesElapsed = (Date.now() - sessionCreatedAt.getTime()) / 1000 / 60;
-        if (minutesElapsed > 10) {
-          shouldMarkAsFailed = true;
-          failureReason = 'Payment abandoned - session not completed';
-        }
-      }
-
-      if (shouldMarkAsFailed) {
         order.paymentStatus = 'failed';
         order.metadata = {
           ...order.metadata,
-          failureReason,
-          failedAt: new Date().toISOString(),
-          stripeStatus: session.status,
-          stripePaymentStatus: session.payment_status,
+          failureReason: 'Session expired without payment',
+          sessionStatus: session.status,
         };
         await order.save();
-        console.log(`Order ${order._id} marked as failed - ${failureReason}`);
+        console.log(`Order ${order._id} marked as failed - session expired`);
+      }
+      // Payment explicitly failed (session complete but payment unpaid)
+      else if (session.status === 'complete' && session.payment_status === 'unpaid') {
+        order.paymentStatus = 'failed';
+        order.metadata = {
+          ...order.metadata,
+          failureReason: 'Payment was not completed',
+          sessionStatus: session.status,
+          paymentStatus: session.payment_status,
+        };
+        await order.save();
+        console.log(`Order ${order._id} marked as failed - payment unsuccessful`);
       }
     }
 
@@ -357,25 +339,25 @@ exports.confirmPayment = async (req, res) => {
         message: 'Payment confirmed successfully',
         order: order,
       });
-    } else if (session.payment_status === 'unpaid' || session.payment_status === 'failed' || session.payment_status === 'canceled') {
-      // Mark order as failed if payment was not completed
-      if (order.paymentStatus === 'pending') {
+    } else if (session.payment_status === 'unpaid') {
+      // Mark order as failed if session is expired or complete but unpaid
+      if (session.status === 'expired' || session.status === 'complete') {
         order.paymentStatus = 'failed';
         order.metadata = {
           ...order.metadata,
-          failureReason: session.payment_status === 'canceled' ? 'Payment canceled by user' : 'Payment not completed',
+          failureReason: session.status === 'expired' ? 'Session expired' : 'Payment failed',
+          sessionStatus: session.status,
           failedAt: new Date().toISOString(),
-          stripeStatus: session.status,
-          stripePaymentStatus: session.payment_status,
         };
         await order.save();
         console.log(`Order ${order._id} marked as failed via confirmPayment endpoint`);
       }
 
-      res.status(200).json({
+      res.status(400).json({
         success: false,
-        message: session.payment_status === 'canceled' ? 'Payment was canceled' : 'Payment not completed',
+        message: 'Payment not completed',
         stripeStatus: session.payment_status,
+        sessionStatus: session.status,
         order: order,
       });
     } else {
@@ -383,6 +365,7 @@ exports.confirmPayment = async (req, res) => {
         success: false,
         message: `Payment status: ${session.payment_status}`,
         stripeStatus: session.payment_status,
+        sessionStatus: session.status,
         order: order,
       });
     }

@@ -118,7 +118,7 @@ const Home = () => {
       <header className="bg-white border-b sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">Minimalist Store</h1>
+            <h1 className="text-2xl font-bold">Sample Store</h1>
             <Link
               to="/orders"
               className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors"
@@ -134,7 +134,7 @@ const Home = () => {
       <section className="bg-gradient-to-br from-gray-50 to-gray-100 py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl sm:text-5xl font-bold mb-4">
-            Less is More
+              Productify
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Curated collection of essential products designed for modern living
